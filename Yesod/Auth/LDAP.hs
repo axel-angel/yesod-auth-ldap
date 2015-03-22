@@ -9,7 +9,8 @@
 
 
 module Yesod.Auth.LDAP
-   ( genericAuthLDAP
+   ( YesodAuthLdap(..)
+   , authLDAP
    , LDAPConfig (..)) where
 
 import Yesod.Core (lift)
@@ -39,9 +40,12 @@ data LDAPConfig = LDAPConfig {
  , ldapScope :: LDAPScope
  }
 
+class YesodAuth m => YesodAuthLdap m where
+    getLdapConfig :: HandlerT m IO LDAPConfig
 
-genericAuthLDAP :: YesodAuth m => LDAPConfig -> AuthPlugin m
-genericAuthLDAP config = AuthPlugin "LDAP" dispatch $ \tm -> toWidget
+
+authLDAP :: YesodAuthLdap m => AuthPlugin m
+authLDAP = AuthPlugin "LDAP" dispatch $ \tm -> toWidget
     [whamlet|
         <form method="post" action="@{tm login}">
             <table>
@@ -56,18 +60,19 @@ genericAuthLDAP config = AuthPlugin "LDAP" dispatch $ \tm -> toWidget
                 <tr>
                     <td colspan="2">
                         <button type=submit .btn .btn-success>Login
-|]
-  where
-    dispatch "POST" ["login_ldap"] = postLoginR config >>= sendResponse
-    dispatch _ _ = notFound
+    |]
+    where
+        dispatch "POST" ["login_ldap"] = postLoginR >>= sendResponse
+        dispatch _ _ = notFound
 
 
 login :: AuthRoute
 login = PluginR "LDAP" ["login_ldap"]
 
 
-postLoginR :: (YesodAuth y) => LDAPConfig -> HandlerT Auth (HandlerT y IO) ()
-postLoginR config = do
+postLoginR :: (YesodAuthLdap y) => HandlerT Auth (HandlerT y IO) ()
+postLoginR = do
+    config <- lift getLdapConfig
     (mu,mp) <- lift $ runInputPost $ (,)
         <$> iopt textField "username"
         <*> iopt textField "password"

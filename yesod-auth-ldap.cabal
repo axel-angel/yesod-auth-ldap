@@ -1,9 +1,9 @@
 name:            yesod-auth-ldap
-version:         0.0.4
+version:         0.1
 license:         BSD3
 license-file:    LICENSE
-author:          Michael Litchard 
-maintainer:      Michael Litchard 
+author:          Michael Litchard, Axel Angel
+maintainer:      Michael Litchard
 synopsis:        LDAP Authentication for Yesod.
 category:        Web, Yesod
 stability:       experimental 
